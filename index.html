@@ -1,12 +1,79 @@
-<script>
-    // MASUKKAN URL GOOGLE APPS SCRIPT ANDA DI ANTARA TANDA PETIK DI BAWAH INI:
-    const SCRIPT_URL = https://script.google.com/macros/s/AKfycbw8weWEElXsu2CGHY9P25UnMWbSDRlC3DhbdiOMzNJGrGtvBH4WqrIlb1OoKlCNoze-mw/exec; 
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Keuangan Saya</title>
+  <style>
+    body { font-family: sans-serif; padding: 15px; max-width: 420px; margin: auto; background: #f0f2f5; }
+    .card { background: white; padding: 15px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
+    .rekap-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+    .rekap-box { padding: 10px; border-radius: 8px; text-align: center; }
+    .masuk { background: #dcfce7; color: #166534; }
+    .keluar { background: #fee2e2; color: #991b1b; }
+    .saldo { background: #dbeafe; color: #1e40af; grid-column: span 2; }
+    input, select, button { width: 100%; padding: 10px; margin-top: 8px; border-radius: 6px; border: 1px solid #ccc; box-sizing: border-box; }
+    button { background: #2563eb; color: white; font-weight: bold; border: none; cursor: pointer; }
+    .tx-item { display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding: 8px 0; font-size: 14px; }
+  </style>
+</head>
+<body>
+
+  <!-- Ringkasan Keuangan -->
+  <div class="card">
+    <h3 style="margin-top:0;">Ringkasan Keuangan</h3>
+    <div class="rekap-grid">
+      <div class="rekap-box saldo">
+        <small>Total Saldo</small>
+        <h2 id="saldo" style="margin: 5px 0 0 0;">Rp 0</h2>
+      </div>
+      <div class="rekap-box masuk">
+        <small>Pemasukan</small>
+        <div id="pemasukan" style="font-weight:bold;">Rp 0</div>
+      </div>
+      <div class="rekap-box keluar">
+        <small>Pengeluaran</small>
+        <div id="pengeluaran" style="font-weight:bold;">Rp 0</div>
+      </div>
+    </div>
+    <button onclick="loadRekap()" style="background: #64748b; margin-top: 5px;">Refresh Rekap</button>
+  </div>
+
+  <!-- Form Transaksi -->
+  <div class="card">
+    <h3 style="margin-top:0;">Tambah Transaksi</h3>
+    <form id="financeForm">
+      <select id="jenis">
+        <option value="Pengeluaran">Pengeluaran</option>
+        <option value="Pemasukan">Pemasukan</option>
+      </select>
+      <input type="text" id="kategori" placeholder="Kategori (Contoh: Makanan)" required>
+      <input type="number" id="jumlah" placeholder="Jumlah (Rp)" required>
+      <input type="text" id="catatan" placeholder="Catatan/Keterangan">
+      <button type="submit" id="submitBtn">Simpan Transaksi</button>
+    </form>
+  </div>
+
+  <!-- Riwayat -->
+  <div class="card">
+    <h3 style="margin-top:0;">10 Transaksi Terakhir</h3>
+    <div id="riwayatList">Loading riwayat...</div>
+  </div>
+
+  <script>
+    // GANTI URL DI BAWAH INI DENGAN URL APPS SCRIPT ANDA
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw8weWEElXsu2CGHY9P25UnMWbSDRlC3DhbdiOMzNJGrGtvBH4WqrIlb1OoKlCNoze-mw/exec"; 
 
     function formatRupiah(angka) {
       return 'Rp ' + Number(angka).toLocaleString('id-ID');
     }
 
     function loadRekap() {
+      if(SCRIPT_URL === "https://script.google.com/macros/s/AKfycbw8weWEElXsu2CGHY9P25UnMWbSDRlC3DhbdiOMzNJGrGtvBH4WqrIlb1OoKlCNoze-mw/exec" || SCRIPT_URL === "") {
+        document.getElementById('riwayatList').innerHTML = '<small style="color:red;">URL Apps Script belum diisi pada file HTML!</small>';
+        return;
+      }
+
       fetch(SCRIPT_URL)
         .then(res => res.json())
         .then(data => {
@@ -15,7 +82,7 @@
           document.getElementById('pengeluaran').innerText = formatRupiah(data.totalPengeluaran);
           
           let html = '';
-          if(data.riwayat.length === 0) {
+          if(!data.riwayat || data.riwayat.length === 0) {
             html = '<small>Belum ada transaksi</small>';
           } else {
             data.riwayat.forEach(item => {
@@ -35,7 +102,10 @@
           }
           document.getElementById('riwayatList').innerHTML = html;
         })
-        .catch(err => console.error('Gagal mengambil data:', err));
+        .catch(err => {
+          console.error('Error:', err);
+          document.getElementById('riwayatList').innerHTML = '<small style="color:red;">Gagal mengambil data dari Google Sheets.</small>';
+        });
     }
 
     document.getElementById('financeForm').addEventListener('submit', function(e) {
@@ -68,7 +138,6 @@
       });
     });
 
-    // Muat data saat halaman dibuka
     loadRekap();
   </script>
 </body>
