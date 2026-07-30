@@ -2,143 +2,77 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Keuangan Saya</title>
-  <style>
-    body { font-family: sans-serif; padding: 15px; max-width: 420px; margin: auto; background: #f0f2f5; }
-    .card { background: white; padding: 15px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
-    .rekap-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
-    .rekap-box { padding: 10px; border-radius: 8px; text-align: center; }
-    .masuk { background: #dcfce7; color: #166534; }
-    .keluar { background: #fee2e2; color: #991b1b; }
-    .saldo { background: #dbeafe; color: #1e40af; grid-column: span 2; }
-    input, select, button { width: 100%; padding: 10px; margin-top: 8px; border-radius: 6px; border: 1px solid #ccc; box-sizing: border-box; }
-    button { background: #2563eb; color: white; font-weight: bold; border: none; cursor: pointer; }
-    .tx-item { display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding: 8px 0; font-size: 14px; }
-  </style>
+  <title>Rekap Keuangan</title>
 </head>
 <body>
 
-  <!-- Ringkasan Keuangan -->
-  <div class="card">
-    <h3 style="margin-top:0;">Ringkasan Keuangan</h3>
-    <div class="rekap-grid">
-      <div class="rekap-box saldo">
-        <small>Total Saldo</small>
-        <h2 id="saldo" style="margin: 5px 0 0 0;">Rp 0</h2>
-      </div>
-      <div class="rekap-box masuk">
-        <small>Pemasukan</small>
-        <div id="pemasukan" style="font-weight:bold;">Rp 0</div>
-      </div>
-      <div class="rekap-box keluar">
-        <small>Pengeluaran</small>
-        <div id="pengeluaran" style="font-weight:bold;">Rp 0</div>
-      </div>
-    </div>
-    <button onclick="loadRekap()" style="background: #64748b; margin-top: 5px;">Refresh Rekap</button>
+  <!-- Bagian Ringkasan -->
+  <div>
+    <h3>Total Pemasukan: Rp <span id="pemasukan">0</span></h3>
+    <h3>Total Pengeluaran: Rp <span id="pengeluaran">0</span></h3>
+    <h3>Total Saldo: Rp <span id="saldo">0</span></h3>
   </div>
 
-  <!-- Form Transaksi -->
-  <div class="card">
-    <h3 style="margin-top:0;">Tambah Transaksi</h3>
-    <form id="financeForm">
-      <select id="jenis">
-        <option value="Pengeluaran">Pengeluaran</option>
-        <option value="Pemasukan">Pemasukan</option>
-      </select>
-      <input type="text" id="kategori" placeholder="Kategori (Contoh: Makanan)" required>
-      <input type="number" id="jumlah" placeholder="Jumlah (Rp)" required>
-      <input type="text" id="catatan" placeholder="Catatan/Keterangan">
-      <button type="submit" id="submitBtn">Simpan Transaksi</button>
-    </form>
-  </div>
+  <hr>
 
-  <!-- Riwayat -->
-  <div class="card">
-    <h3 style="margin-top:0;">10 Transaksi Terakhir</h3>
-    <div id="riwayatList">Loading riwayat...</div>
-  </div>
+  <!-- Bagian Tabel Riwayat -->
+  <h3>10 Transaksi Terakhir</h3>
+  <table border="1" cellpadding="5">
+    <thead>
+      <tr>
+        <th>Jenis</th>
+        <th>Kategori</th>
+        <th>Jumlah</th>
+        <th>Catatan</th>
+      </tr>
+    </thead>
+    <tbody id="tabel-riwayat">
+      <tr><td colspan="4">Loading data...</td></tr>
+    </tbody>
+  </table>
 
   <script>
-    // GANTI URL DI BAWAH INI DENGAN URL APPS SCRIPT ANDA
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwuO4Un-d-vLBme9ZiKXTUSf2afBTl9O2rKbrIyfjQDcS8Lb8KtC3maEvbyFd5YSL9E/exec"; 
+    // Ganti dengan URL Web App Apps Script kamu yang terbaru
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzz-QoB96-PTLcTebdIcDsLYp2R5cSBO9-fZMPR4_lu2-UxJYyQUFqjxQm8eEi5-rY5OQ/exec";
 
-    function formatRupiah(angka) {
-      return 'Rp ' + Number(angka).toLocaleString('id-ID');
-    }
-
-    function loadRekap() {
-      if(SCRIPT_URL === "https://script.google.com/macros/s/AKfycbwuO4Un-d-vLBme9ZiKXTUSf2afBTl9O2rKbrIyfjQDcS8Lb8KtC3maEvbyFd5YSL9E/exec" || SCRIPT_URL === "") {
-        document.getElementById('riwayatList').innerHTML = '<small style="color:red;">URL Apps Script belum diisi pada file HTML!</small>';
-        return;
-      }
-
+    function muatData() {
       fetch(SCRIPT_URL)
-        .then(res => res.json())
+        .then(response => response.json())
         .then(data => {
-          document.getElementById('saldo').innerText = formatRupiah(data.totalSaldo);
-          document.getElementById('pemasukan').innerText = formatRupiah(data.totalPemasukan);
-          document.getElementById('pengeluaran').innerText = formatRupiah(data.totalPengeluaran);
-          
-          let html = '';
-          if(!data.riwayat || data.riwayat.length === 0) {
-            html = '<small>Belum ada transaksi</small>';
-          } else {
-            data.riwayat.forEach(item => {
-              const color = item.jenis === 'Pemasukan' ? 'green' : 'red';
-              const sign = item.jenis === 'Pemasukan' ? '+' : '-';
-              html += `
-                <div class="tx-item">
-                  <div>
-                    <strong>${item.kategori}</strong> <br>
-                    <small style="color:#666">${item.catatan || '-'}</small>
-                  </div>
-                  <div style="color: ${color}; font-weight: bold;">
-                    ${sign} ${formatRupiah(item.jumlah)}
-                  </div>
-                </div>`;
-            });
+          // 1. Tampilkan Total
+          document.getElementById('pemasukan').innerText = data.totalPemasukan.toLocaleString('id-ID');
+          document.getElementById('pengeluaran').innerText = data.totalPengeluaran.toLocaleString('id-ID');
+          document.getElementById('saldo').innerText = data.totalSaldo.toLocaleString('id-ID');
+
+          // 2. Tampilkan Riwayat ke Tabel
+          const tbody = document.getElementById('tabel-riwayat');
+          tbody.innerHTML = ''; // Bersihkan isi tabel sementara
+
+          if (data.riwayat.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4">Belum ada transaksi</td></tr>';
+            return;
           }
-          document.getElementById('riwayatList').innerHTML = html;
+
+          data.riwayat.forEach(item => {
+            const row = `
+              <tr>
+                <td>${item.jenis}</td>
+                <td>${item.kategori}</td>
+                <td>Rp ${item.jumlah.toLocaleString('id-ID')}</td>
+                <td>${item.catatan || '-'}</td>
+              </tr>
+            `;
+            tbody.innerHTML += row;
+          });
         })
-        .catch(err => {
-          console.error('Error:', err);
-          document.getElementById('riwayatList').innerHTML = '<small style="color:red;">Gagal mengambil data dari Google Sheets.</small>';
+        .catch(error => {
+          console.error("Gagal mengambil data:", error);
+          document.getElementById('tabel-riwayat').innerHTML = '<tr><td colspan="4">Gagal memuat data. Cek konsole/URL.</td></tr>';
         });
     }
 
-    document.getElementById('financeForm').addEventListener('submit', function(e) {
-      e.preventDefault();
-      const btn = document.getElementById('submitBtn');
-      btn.innerText = 'Menyimpan...';
-      btn.disabled = true;
-
-      const payload = {
-        jenis: document.getElementById('jenis').value,
-        kategori: document.getElementById('kategori').value,
-        jumlah: document.getElementById('jumlah').value,
-        catatan: document.getElementById('catatan').value
-      };
-
-      fetch(SCRIPT_URL, {
-        method: 'POST',
-        body: JSON.stringify(payload)
-      })
-      .then(res => res.json())
-      .then(data => {
-        alert('Data berhasil disimpan!');
-        document.getElementById('financeForm').reset();
-        loadRekap();
-      })
-      .catch(err => alert('Gagal menyimpan: ' + err))
-      .finally(() => {
-        btn.innerText = 'Simpan Transaksi';
-        btn.disabled = false;
-      });
-    });
-
-    loadRekap();
+    // Jalankan fungsi saat halaman selesai di-load
+    window.onload = muatData;
   </script>
 </body>
 </html>
