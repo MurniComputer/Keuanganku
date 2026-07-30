@@ -62,14 +62,14 @@
 
   <script>
     // GANTI URL DI BAWAH INI DENGAN URL APPS SCRIPT ANDA
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbys9F6Lyqci7bE3YR70vaB_0h70SC30dZFMR9iBH9HrbAhWkiffA7tOtjQOxcUPwUGmKw/exec"; 
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwuO4Un-d-vLBme9ZiKXTUSf2afBTl9O2rKbrIyfjQDcS8Lb8KtC3maEvbyFd5YSL9E/exec"; 
 
     function formatRupiah(angka) {
       return 'Rp ' + Number(angka).toLocaleString('id-ID');
     }
 
     function loadRekap() {
-      if(SCRIPT_URL === "https://script.google.com/macros/s/AKfycbys9F6Lyqci7bE3YR70vaB_0h70SC30dZFMR9iBH9HrbAhWkiffA7tOtjQOxcUPwUGmKw/exec" || SCRIPT_URL === "") {
+      if(SCRIPT_URL === "https://script.google.com/macros/s/AKfycbwuO4Un-d-vLBme9ZiKXTUSf2afBTl9O2rKbrIyfjQDcS8Lb8KtC3maEvbyFd5YSL9E/exec" || SCRIPT_URL === "") {
         document.getElementById('riwayatList').innerHTML = '<small style="color:red;">URL Apps Script belum diisi pada file HTML!</small>';
         return;
       }
