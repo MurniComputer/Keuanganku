@@ -1,44 +1,75 @@
-Keuangan Saya
-  
+<script>
+    // MASUKKAN URL GOOGLE APPS SCRIPT ANDA DI ANTARA TANDA PETIK DI BAWAH INI:
+    const SCRIPT_URL = https://script.google.com/macros/s/AKfycbw8weWEElXsu2CGHY9P25UnMWbSDRlC3DhbdiOMzNJGrGtvBH4WqrIlb1OoKlCNoze-mw/exec; 
 
+    function formatRupiah(angka) {
+      return 'Rp ' + Number(angka).toLocaleString('id-ID');
+    }
 
+    function loadRekap() {
+      fetch(SCRIPT_URL)
+        .then(res => res.json())
+        .then(data => {
+          document.getElementById('saldo').innerText = formatRupiah(data.totalSaldo);
+          document.getElementById('pemasukan').innerText = formatRupiah(data.totalPemasukan);
+          document.getElementById('pengeluaran').innerText = formatRupiah(data.totalPengeluaran);
+          
+          let html = '';
+          if(data.riwayat.length === 0) {
+            html = '<small>Belum ada transaksi</small>';
+          } else {
+            data.riwayat.forEach(item => {
+              const color = item.jenis === 'Pemasukan' ? 'green' : 'red';
+              const sign = item.jenis === 'Pemasukan' ? '+' : '-';
+              html += `
+                <div class="tx-item">
+                  <div>
+                    <strong>${item.kategori}</strong> <br>
+                    <small style="color:#666">${item.catatan || '-'}</small>
+                  </div>
+                  <div style="color: ${color}; font-weight: bold;">
+                    ${sign} ${formatRupiah(item.jumlah)}
+                  </div>
+                </div>`;
+            });
+          }
+          document.getElementById('riwayatList').innerHTML = html;
+        })
+        .catch(err => console.error('Gagal mengambil data:', err));
+    }
 
-  
-  
-    Ringkasan Keuangan
-    
-      
-        Total Saldo
-        Rp 0
-      
-      
-        Pemasukan
-        Rp 0
-      
-      
-        Pengeluaran
-        Rp 0
-      
-    
-    Refresh Rekap
-  
+    document.getElementById('financeForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const btn = document.getElementById('submitBtn');
+      btn.innerText = 'Menyimpan...';
+      btn.disabled = true;
 
-  
-  
-    Tambah Transaksi
-    
-      
-        Pengeluaran
-        Pemasukan
-      
-      
-      
-      
-      Simpan Transaksi
-    
-  
+      const payload = {
+        jenis: document.getElementById('jenis').value,
+        kategori: document.getElementById('kategori').value,
+        jumlah: document.getElementById('jumlah').value,
+        catatan: document.getElementById('catatan').value
+      };
 
-  
-  
-    10 Transaksi Terakhir
-    Loading riwayat...
+      fetch(SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      })
+      .then(res => res.json())
+      .then(data => {
+        alert('Data berhasil disimpan!');
+        document.getElementById('financeForm').reset();
+        loadRekap();
+      })
+      .catch(err => alert('Gagal menyimpan: ' + err))
+      .finally(() => {
+        btn.innerText = 'Simpan Transaksi';
+        btn.disabled = false;
+      });
+    });
+
+    // Muat data saat halaman dibuka
+    loadRekap();
+  </script>
+</body>
+</html>
