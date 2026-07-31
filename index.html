@@ -82,11 +82,11 @@
 
   <script>
     // MASUKKAN URL WEB APP APPS SCRIPT HASIL DEPLOY DI SINI:
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby3Ah2viqHMqrTRewHATXWSu-HkyzFTeGw1fPMMzwghIAl4r51W5WOJ9NxVHcsVmOhSAw/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyKkTOGYEygvXHpoa7wpyoZXRbhqo_QEk3zC7rywE6uF7c_tH8ETv86-JeRm3d8BruxAA/exec";
 
     // 1. Fungsi Ambil Data (doGet)
     function muatData() {
-      if (!SCRIPT_URL || SCRIPT_URL === "https://script.google.com/macros/s/AKfycby3Ah2viqHMqrTRewHATXWSu-HkyzFTeGw1fPMMzwghIAl4r51W5WOJ9NxVHcsVmOhSAw/exec") {
+      if (!SCRIPT_URL || SCRIPT_URL === "https://script.google.com/macros/s/AKfycbyKkTOGYEygvXHpoa7wpyoZXRbhqo_QEk3zC7rywE6uF7c_tH8ETv86-JeRm3d8BruxAA/exec") {
         alert("URL Apps Script belum diisi!");
         return;
       }
@@ -124,7 +124,7 @@
     }
 
     // 2. Fungsi Kirim Data (doPost)
-    document.getElementById('formTransaksi').addEventListener('submit', function(e) {
+   document.getElementById('formTransaksi').addEventListener('submit', function(e) {
   e.preventDefault();
   
   const btn = document.getElementById('btnSimpan');
@@ -138,28 +138,30 @@
     catatan: document.getElementById('catatan').value
   };
 
-  // Menggunakan text/plain agar tidak memicu error CORS Preflight di Google Apps Script
+  // Menggunakan URLSearchParams / Form Data agar kompatibel dengan Apps Script tanpa kendala CORS
   fetch(SCRIPT_URL, {
     method: 'POST',
-    contentType: 'application/json',
+    mode: 'no-cors', // Penting agar permintaan POST tidak diblokir oleh browser
+    headers: {
+      'Content-Type': 'text/plain;charset=utf-8',
+    },
     body: JSON.stringify(payload)
   })
-  .then(res => res.json())
-  .then(res => {
+  .then(() => {
+    // Karena menggunakan no-cors, responnya bersifat opaque (tidak bisa dibaca .json()),
+    // tapi jika tidak masuk ke .catch berarti data BERHASIL terkirim ke Apps Script.
+    alert("Transaksi berhasil dikirim!");
+    
     btn.innerText = "Simpan Transaksi";
     btn.disabled = false;
 
-    if (res.status === "success") {
-      alert("Transaksi berhasil disimpan!");
-      // Reset input form
-      document.getElementById('kategori').value = '';
-      document.getElementById('jumlah').value = '';
-      document.getElementById('catatan').value = '';
-      // Refresh tabel rekap
-      muatData();
-    } else {
-      alert("Gagal simpan: " + (res.message || "Terjadi kesalahan"));
-    }
+    // Reset Form Input
+    document.getElementById('kategori').value = '';
+    document.getElementById('jumlah').value = '';
+    document.getElementById('catatan').value = '';
+
+    // Muat ulang data tabel setelah jeda 1.5 detik (memberi waktu Google Sheet menulis baris)
+    setTimeout(muatData, 1500);
   })
   .catch(err => {
     console.error("Error simpan:", err);
