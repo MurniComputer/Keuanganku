@@ -125,40 +125,49 @@
 
     // 2. Fungsi Kirim Data (doPost)
     document.getElementById('formTransaksi').addEventListener('submit', function(e) {
-      e.preventDefault();
-      
-      const btn = document.getElementById('btnSimpan');
-      btn.innerText = "Menyimpan...";
-      btn.disabled = true;
+  e.preventDefault();
+  
+  const btn = document.getElementById('btnSimpan');
+  btn.innerText = "Menyimpan...";
+  btn.disabled = true;
 
-      const payload = {
-        jenis: document.getElementById('jenis').value,
-        kategori: document.getElementById('kategori').value,
-        jumlah: document.getElementById('jumlah').value,
-        catatan: document.getElementById('catatan').value
-      };
+  const payload = {
+    jenis: document.getElementById('jenis').value,
+    kategori: document.getElementById('kategori').value,
+    jumlah: document.getElementById('jumlah').value,
+    catatan: document.getElementById('catatan').value
+  };
 
-      fetch(SCRIPT_URL, {
-        method: 'POST',
-        body: JSON.stringify(payload)
-      })
-      .then(res => res.json())
-      .then(res => {
-        btn.innerText = "Simpan Transaksi";
-        btn.disabled = false;
-        
-        // Reset form input & muat ulang rekap
-        document.getElementById('kategori').value = '';
-        document.getElementById('jumlah').value = '';
-        document.getElementById('catatan').value = '';
-        muatData();
-      })
-      .catch(err => {
-        alert("Gagal menyimpan data!");
-        btn.innerText = "Simpan Transaksi";
-        btn.disabled = false;
-      });
-    });
+  // Menggunakan text/plain agar tidak memicu error CORS Preflight di Google Apps Script
+  fetch(SCRIPT_URL, {
+    method: 'POST',
+    contentType: 'application/json',
+    body: JSON.stringify(payload)
+  })
+  .then(res => res.json())
+  .then(res => {
+    btn.innerText = "Simpan Transaksi";
+    btn.disabled = false;
+
+    if (res.status === "success") {
+      alert("Transaksi berhasil disimpan!");
+      // Reset input form
+      document.getElementById('kategori').value = '';
+      document.getElementById('jumlah').value = '';
+      document.getElementById('catatan').value = '';
+      // Refresh tabel rekap
+      muatData();
+    } else {
+      alert("Gagal simpan: " + (res.message || "Terjadi kesalahan"));
+    }
+  })
+  .catch(err => {
+    console.error("Error simpan:", err);
+    alert("Gagal menyimpan data! Cek koneksi / URL Apps Script.");
+    btn.innerText = "Simpan Transaksi";
+    btn.disabled = false;
+  });
+});
 
     // Jalankan saat pertama kali dibuka
     window.onload = muatData;
