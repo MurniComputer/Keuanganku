@@ -2,76 +2,165 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <title>Rekap Keuangan</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ringkasan Keuangan</title>
+  <style>
+    body { font-family: sans-serif; background: #f0f2f5; margin: 0; padding: 20px; display: flex; justify-content: center; }
+    .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); width: 100%; max-width: 400px; margin-bottom: 15px; }
+    h3, h4 { margin-top: 0; color: #333; }
+    .box-saldo { background: #e8f0fe; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 10px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+    .box-pemasukan { background: #e6f4ea; padding: 10px; border-radius: 8px; text-align: center; color: #137333; }
+    .box-pengeluaran { background: #fce8e6; padding: 10px; border-radius: 8px; text-align: center; color: #c5221f; }
+    .btn { width: 100%; padding: 10px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 5px; }
+    .btn-refresh { background: #5f6368; color: white; }
+    .btn-submit { background: #1a73e8; color: white; }
+    input, select { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    th { background: #f8f9fa; }
+  </style>
 </head>
 <body>
 
-  <!-- Bagian Ringkasan -->
-  <div>
-    <h3>Total Pemasukan: Rp <span id="pemasukan">0</span></h3>
-    <h3>Total Pengeluaran: Rp <span id="pengeluaran">0</span></h3>
-    <h3>Total Saldo: Rp <span id="saldo">0</span></h3>
+  <div style="width: 100%; max-width: 400px;">
+    
+    <!-- RINGKASAN KEUANGAN -->
+    <div class="card">
+      <h3>Ringkasan Keuangan</h3>
+      <div class="box-saldo">
+        <small style="color: #1a73e8;">Total Saldo</small>
+        <h2 id="saldo" style="margin: 5px 0 0 0; color: #1a73e8;">Rp 0</h2>
+      </div>
+      <div class="grid-2">
+        <div class="box-pemasukan">
+          <small>Pemasukan</small>
+          <div id="pemasukan" style="font-weight:bold;">Rp 0</div>
+        </div>
+        <div class="box-pengeluaran">
+          <small>Pengeluaran</small>
+          <div id="pengeluaran" style="font-weight:bold;">Rp 0</div>
+        </div>
+      </div>
+      <button class="btn btn-refresh" onclick="muatData()">Refresh Rekap</button>
+    </div>
+
+    <!-- FORM INPUT TRANSACTION -->
+    <div class="card">
+      <h3>Tambah Transaksi</h3>
+      <form id="formTransaksi">
+        <select id="jenis">
+          <option value="Pemasukan">Pemasukan</option>
+          <option value="Pengeluaran" selected>Pengeluaran</option>
+        </select>
+        <input type="text" id="kategori" placeholder="Kategori (Contoh: Makanan)" required>
+        <input type="number" id="jumlah" placeholder="Jumlah (Rp)" required>
+        <input type="text" id="catatan" placeholder="Catatan/Keterangan">
+        <button type="submit" class="btn btn-submit" id="btnSimpan">Simpan Transaksi</button>
+      </form>
+    </div>
+
+    <!-- TABEL 10 TRANSAKSI TERAKHIR -->
+    <div class="card">
+      <h3>10 Transaksi Terakhir</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Jenis</th>
+            <th>Kategori</th>
+            <th>Jumlah</th>
+            <th>Catatan</th>
+          </tr>
+        </thead>
+        <tbody id="tabelRiwayat">
+          <tr><td colspan="4" style="text-align:center;">Memuat data...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
   </div>
 
-  <hr>
-
-  <!-- Bagian Tabel Riwayat -->
-  <h3>10 Transaksi Terakhir</h3>
-  <table border="1" cellpadding="5">
-    <thead>
-      <tr>
-        <th>Jenis</th>
-        <th>Kategori</th>
-        <th>Jumlah</th>
-        <th>Catatan</th>
-      </tr>
-    </thead>
-    <tbody id="tabel-riwayat">
-      <tr><td colspan="4">Loading data...</td></tr>
-    </tbody>
-  </table>
-
   <script>
-    // Ganti dengan URL Web App Apps Script kamu yang terbaru
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzz-QoB96-PTLcTebdIcDsLYp2R5cSBO9-fZMPR4_lu2-UxJYyQUFqjxQm8eEi5-rY5OQ/exec";
+    // MASUKKAN URL WEB APP APPS SCRIPT HASIL DEPLOY DI SINI:
+    const SCRIPT_URL = "PASTE_URL_WEB_APP_KAMU_DI_SINI";
 
+    // 1. Fungsi Ambil Data (doGet)
     function muatData() {
+      if (!SCRIPT_URL || SCRIPT_URL === "PASTE_URL_WEB_APP_KAMU_DI_SINI") {
+        alert("URL Apps Script belum diisi!");
+        return;
+      }
+
       fetch(SCRIPT_URL)
-        .then(response => response.json())
+        .then(res => res.json())
         .then(data => {
-          // 1. Tampilkan Total
-          document.getElementById('pemasukan').innerText = data.totalPemasukan.toLocaleString('id-ID');
-          document.getElementById('pengeluaran').innerText = data.totalPengeluaran.toLocaleString('id-ID');
-          document.getElementById('saldo').innerText = data.totalSaldo.toLocaleString('id-ID');
+          document.getElementById('pemasukan').innerText = 'Rp ' + data.totalPemasukan.toLocaleString('id-ID');
+          document.getElementById('pengeluaran').innerText = 'Rp ' + data.totalPengeluaran.toLocaleString('id-ID');
+          document.getElementById('saldo').innerText = 'Rp ' + data.totalSaldo.toLocaleString('id-ID');
 
-          // 2. Tampilkan Riwayat ke Tabel
-          const tbody = document.getElementById('tabel-riwayat');
-          tbody.innerHTML = ''; // Bersihkan isi tabel sementara
+          const tbody = document.getElementById('tabelRiwayat');
+          tbody.innerHTML = '';
 
-          if (data.riwayat.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4">Belum ada transaksi</td></tr>';
+          if (!data.riwayat || data.riwayat.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Belum ada data</td></tr>';
             return;
           }
 
           data.riwayat.forEach(item => {
-            const row = `
+            tbody.innerHTML += `
               <tr>
                 <td>${item.jenis}</td>
                 <td>${item.kategori}</td>
-                <td>Rp ${item.jumlah.toLocaleString('id-ID')}</td>
+                <td>Rp ${Number(item.jumlah).toLocaleString('id-ID')}</td>
                 <td>${item.catatan || '-'}</td>
               </tr>
             `;
-            tbody.innerHTML += row;
           });
         })
-        .catch(error => {
-          console.error("Gagal mengambil data:", error);
-          document.getElementById('tabel-riwayat').innerHTML = '<tr><td colspan="4">Gagal memuat data. Cek konsole/URL.</td></tr>';
+        .catch(err => {
+          console.error(err);
+          document.getElementById('tabelRiwayat').innerHTML = '<tr><td colspan="4" style="text-align:center; color:red;">Gagal memuat data</td></tr>';
         });
     }
 
-    // Jalankan fungsi saat halaman selesai di-load
+    // 2. Fungsi Kirim Data (doPost)
+    document.getElementById('formTransaksi').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const btn = document.getElementById('btnSimpan');
+      btn.innerText = "Menyimpan...";
+      btn.disabled = true;
+
+      const payload = {
+        jenis: document.getElementById('jenis').value,
+        kategori: document.getElementById('kategori').value,
+        jumlah: document.getElementById('jumlah').value,
+        catatan: document.getElementById('catatan').value
+      };
+
+      fetch(SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      })
+      .then(res => res.json())
+      .then(res => {
+        btn.innerText = "Simpan Transaksi";
+        btn.disabled = false;
+        
+        // Reset form input & muat ulang rekap
+        document.getElementById('kategori').value = '';
+        document.getElementById('jumlah').value = '';
+        document.getElementById('catatan').value = '';
+        muatData();
+      })
+      .catch(err => {
+        alert("Gagal menyimpan data!");
+        btn.innerText = "Simpan Transaksi";
+        btn.disabled = false;
+      });
+    });
+
+    // Jalankan saat pertama kali dibuka
     window.onload = muatData;
   </script>
 </body>
